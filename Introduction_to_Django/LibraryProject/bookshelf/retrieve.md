@@ -9,7 +9,7 @@
 from bookshelf.models import Book
 
 # Retrieve all Book instances
-books = Book.objects.all()
+books = Book.objects.get()
 
 # View the book we created
 for book in books:
