@@ -1,5 +1,7 @@
 
-
+    
+from django.contrib.auth.decorators import user_passes_test, login_required
+from django.shortcuts import render
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth.forms import UserCreationForm
@@ -28,3 +30,24 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
+
+
+def role_check(role):
+    def check(user):
+        return hasattr(user, 'userprofile') and user.userprofile.role == role
+    return check
+
+@user_passes_test(role_check('Admin'))
+@login_required
+def admin_view(request):
+    return render(request, 'relationship_app/admin_view.html')
+
+@user_passes_test(role_check('Librarian'))
+@login_required
+def librarian_view(request):
+    return render(request, 'relationship_app/librarian_view.html')
+
+@user_passes_test(role_check('Member'))
+@login_required
+def member_view(request):
+    return render(request, 'relationship_app/member_view.html')
