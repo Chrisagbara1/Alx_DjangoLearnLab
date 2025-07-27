@@ -62,6 +62,13 @@ SECURE_BROWSER_XSS_FILTER = True    # Enable browser's XSS protection
 
 # ─────────────────────────────────────────────────────────────────
 
+# ─── TRUST PROXY HEADERS FOR HTTPS ────────────────────────────────
+
+# Tells Django to trust the X-Forwarded-Proto header from a proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ──────────────────────────────────────────────────────────────────
+
 ALLOWED_HOSTS = []
 
 
