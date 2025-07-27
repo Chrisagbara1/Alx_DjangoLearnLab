@@ -42,6 +42,26 @@ CSRF_COOKIE_SECURE = True
 # Only send session cookie over HTTPS
 SESSION_COOKIE_SECURE = True
 
+# ─── HTTPS ENFORCEMENT ───────────────────────────────────────────
+
+# Redirect all HTTP requests to HTTPS (important for production)
+SECURE_SSL_REDIRECT = True  # Enforces HTTPS for all requests
+
+# HTTP Strict Transport Security (HSTS)
+SECURE_HSTS_SECONDS = 31536000  # 1 year in seconds
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Apply HSTS to all subdomains
+SECURE_HSTS_PRELOAD = True  # Allows your domain to be included in browser preload lists
+
+# ──────────────────────────────────────────────────────────────────
+
+# ─── SECURITY HEADERS ────────────────────────────────────────────
+
+X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking by blocking <iframe> use
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME-type sniffing
+SECURE_BROWSER_XSS_FILTER = True    # Enable browser's XSS protection
+
+# ─────────────────────────────────────────────────────────────────
+
 ALLOWED_HOSTS = []
 
 
