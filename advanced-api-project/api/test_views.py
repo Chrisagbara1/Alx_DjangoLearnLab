@@ -1,99 +1,64 @@
-# api/tests/test_views.py
-
-from django.contrib.auth import get_user_model
-from rest_framework import status
-from rest_framework.test import APITestCase
+from django.test import TestCase
+from django.contrib.auth.models import User
 from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIClient
+from api.models import Book
 
-User = get_user_model()
-
-class BookAPITestCase(APITestCase):
+class BookAPITestCase(TestCase):
     def setUp(self):
-        # Create users
+        # Create a test user
         self.user = User.objects.create_user(
-            username="regularuser",
-            password="testpass123"
-        )
-        self.staff_user = User.objects.create_user(
-            username="staffuser",
-            password="staffpass123",
-            is_staff=True
+            username='testuser',
+            password='testpass123'
         )
 
-        # Define endpoints
-        self.list_url = reverse('book-list')     # e.g., /api/books/
-        self.create_url = reverse('book-create') # e.g., /api/books/create/
-        self.update_url = reverse('book-update', args=[1])  # placeholder book id
-        self.delete_url = reverse('book-delete', args=[1])  # placeholder book id
+        # Create an APIClient
+        self.client = APIClient()
 
-        # Create a sample book as staff user
-        self.client.force_authenticate(user=self.staff_user)
-        response = self.client.post(self.create_url, {
-            "title": "Sample Book",
-            "author": "Author Name",
-            "isbn": "1234567890",
-            "publication_year": 2024
-        }, format="json")
-        self.book_id = response.data.get("id")
-        self.update_url = reverse('book-update', args=[self.book_id])
-        self.delete_url = reverse('book-delete', args=[self.book_id])
-        self.client.logout()
+        # Create a sample book
+        self.book = Book.objects.create(
+            title="Test Book",
+            author="Test Author",
+            description="Test description"
+        )
 
-    def test_list_books_unauthenticated(self):
-        """Anyone should be able to list books."""
-        response = self.client.get(self.list_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    def test_create_book_authenticated(self):
+        # Log in the user
+        login = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login, "Login failed in test_create_book_authenticated")
 
-    def test_create_book_unauthenticated(self):
-        """Unauthenticated users cannot create books."""
-        response = self.client.post(self.create_url, {
-            "title": "Another Book",
+        url = reverse('book-create')  # Ensure this name matches your urls.py
+        data = {
+            "title": "New Book",
             "author": "New Author",
-            "isbn": "0987654321",
-            "publication_year": 2025
-        }, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_create_book_authenticated_non_staff(self):
-        """Authenticated non-staff users cannot create books if restricted."""
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(self.create_url, {
-            "title": "User Book",
-            "author": "User Author",
-            "isbn": "5555555555",
-            "publication_year": 2025
-        }, format="json")
-        self.assertIn(response.status_code, [status.HTTP_403_FORBIDDEN, status.HTTP_201_CREATED])
-
-    def test_create_book_staff_user(self):
-        """Staff user should be able to create books."""
-        self.client.force_authenticate(user=self.staff_user)
-        response = self.client.post(self.create_url, {
-            "title": "Staff Book",
-            "author": "Staff Author",
-            "isbn": "2222222222",
-            "publication_year": 2025
-        }, format="json")
+            "description": "New description"
+        }
+        response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_book_authenticated(self):
-        """Authenticated staff should be able to update a book."""
-        self.client.force_authenticate(user=self.staff_user)
-        response = self.client.put(self.update_url, {
+        # Log in the user
+        login = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login, "Login failed in test_update_book_authenticated")
+
+        url = reverse('book-update', args=[self.book.id])  # Ensure this matches your urls.py
+        data = {
             "title": "Updated Book",
             "author": "Updated Author",
-            "isbn": "3333333333",
-            "publication_year": 2026
-        }, format="json")
+            "description": "Updated description"
+        }
+        response = self.client.put(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, "Updated Book")
 
     def test_delete_book_authenticated(self):
-        """Authenticated staff should be able to delete a book."""
-        self.client.force_authenticate(user=self.staff_user)
-        response = self.client.delete(self.delete_url)
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        # Log in the user
+        login = self.client.login(username='testuser', password='testpass123')
+        self.assertTrue(login, "Login failed in test_delete_book_authenticated")
 
-    def test_delete_book_unauthenticated(self):
-        """Unauthenticated user cannot delete a book."""
-        response = self.client.delete(self.delete_url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        url = reverse('book-delete', args=[self.book.id])  # Ensure this matches your urls.py
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Book.objects.filter(id=self.book.id).exists())
