@@ -19,6 +19,28 @@ class BookAPITestCase(APITestCase):
             password="staffpass123",
             is_staff=True
         )
+    def test_create_book_authenticated(self):
+        # ✅ Login before making POST request
+        self.client.login(username='testuser', password='testpass123')
+
+        data = {
+            "title": "New Book",
+            "author": "Another Author",
+            "published_date": "2024-02-01"
+        }
+        response = self.client.post('/api/books/create/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+
+    def test_create_book_unauthenticated(self):
+        # ❌ No login here — should be denied
+        data = {
+            "title": "Fail Book",
+            "author": "Fail Author",
+            "published_date": "2024-02-01"
+        }
+        response = self.client.post('/api/books/create/', data, format='json')
+        self.assertEqual(response.status_code, 403)  # Forbidden
+
 
         # Define endpoints
         self.list_url = reverse('book-list')     # e.g., /api/books/
