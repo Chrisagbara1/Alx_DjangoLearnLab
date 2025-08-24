@@ -131,3 +131,14 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 def post_by_tag(request, tag_slug):
     posts = Post.objects.filter(tags__slug=tag_slug)
     return render(request, "blog/post_by_tag.html", {"posts": posts, "tag": tag_slug})
+    
+    
+def login_view(request):
+    return render(request, 'blog/login.html')
+
+def register_view(request):
+    return render(request, 'blog/register.html')
+
+@login_required
+def profile_view(request):
+    return render(request, 'blog/profile.html')
