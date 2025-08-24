@@ -6,8 +6,8 @@ from rest_framework.authtoken.models import Token
 User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)  # checker needs this
-    password2 = serializers.CharField(write_only=True)  # confirm password
+    password = serializers.CharField(write_only=True)
+    password2 = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -19,8 +19,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data.pop('password2')  # remove confirm password
-        # checker needs this:
+        validated_data.pop('password2')
+
         user = get_user_model().objects.create_user(
             username=validated_data['username'],
             email=validated_data.get('email'),
@@ -28,4 +28,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             bio=validated_data.get('bio', ''),
             profile_picture=validated_data.get('profile_picture', None),
         )
+
+        Token.objects.create(user=user)
+
         return user
